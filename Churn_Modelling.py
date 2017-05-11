@@ -37,14 +37,14 @@ sc = StandardScaler()
 X_train = sc.fit_transform(X_train)
 X_test = sc.transform(X_test)
 
-
+'''
 # ANN
 import keras
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Dropout
-
-
+'''
+"""
 #Initialize
 classifier = Sequential()
 
@@ -96,24 +96,31 @@ variance = accuracies.std()
 
 #Improving ANN
 #Dropout regularization
-
+"""
 #Tunning ANN
 from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.model_selection import GridSearchCV
 from keras.models import Sequential
 from keras.layers import Dense
-def build_classifier(optimizer, unit):
+from keras.layers import Dropout
+from keras.constraints import maxnorm
+
+def build_classifier(dropout_rate, weight_constraint):
     classifier = Sequential()
-    classifier.add(Dense(units = unit, activation = 'relu', kernel_initializer = 'uniform',  input_dim = 11))
-    classifier.add(Dense(units = unit, activation = 'relu', kernel_initializer = 'uniform'))
+    classifier.add(Dense(units = 6, activation = 'relu', kernel_initializer = 'uniform',  input_dim = 11))
+    classifier.add(Dropout(dropout_rate))
+    classifier.add(Dense(units = 6, activation = 'relu', kernel_initializer = 'uniform', kernel_constraint = maxnorm(weight_constraint)))
+    classifier.add(Dropout(dropout_rate))
     classifier.add(Dense(units = 1, activation = 'sigmoid', kernel_initializer = 'uniform'))
-    classifier.compile(optimizer = optimizer, loss = 'binary_crossentropy' , metrics = ['accuracy'])
+    classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy' , metrics = ['accuracy'])
     return classifier
 classifier = KerasClassifier(build_fn = build_classifier)
-parameters = {'batch_size': [25, 32, 15, 20],
-              'nb_epoch': [100, 500, 400],
-              'optimizer': ['adam', 'rmsprop'],
-              'unit': [6, 8, 10]}
+batch_size = [10, 15, 20]
+epochs = [100, 150]
+weight_constraint = [1, 2, 3, 4, 5]
+dropout_rate = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+parameters = dict(batch_size=batch_size, epochs=epochs, dropout_rate=dropout_rate, weight_constraint=weight_constraint)
+
 grid_search = GridSearchCV(estimator = classifier,
                            param_grid = parameters,
                            scoring = 'accuracy',
@@ -129,11 +136,11 @@ best_accuracy = grid_search.best_score_
 
 
 
-
+"""
 accuracies = cross_val_score(estimator = classifier, X = X_train, y = y_train, cv = 10, n_jobs = -1)
 mean = accuracies.mean()
 variance = accuracies.std()
-
+"""
 
 
 
